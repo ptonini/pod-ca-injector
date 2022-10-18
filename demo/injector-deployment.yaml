@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ca-injector
+  namespace: example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ca-injector
+  template:
+    metadata:
+      labels:
+        app: ca-injector
+    spec:
+      containers:
+      - env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.namespace"
+        image: pod-ca-injector
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8443
+            scheme: HTTPS
+          initialDelaySeconds: 3
+        name: ca-injector
+        ports:
+          - containerPort: 8443
+            protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8443
+            scheme: HTTPS
+          initialDelaySeconds: 3
+        volumeMounts:
+          - mountPath: /certs
+            name: certs
+          - mountPath: /config
+            name: config
+      serviceAccountName: ca-injector
+      volumes:
+        - name: certs
+          secret:
+            secretName: ca-injector-certs
+        - name: config
+          configMap:
+            name: ca-injector-config
