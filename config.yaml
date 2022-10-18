@@ -1,0 +1,11 @@
+annotations:
+  inject: "ptonini.github.io/inject-ca"
+  injected: "ptonini.github.io/ca-injected"
+configMapName: ca-injector
+rootCA:
+  baltimore:
+    type: url
+    source: "https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt.pem"
+  local:
+    type: local
+    bundle: "-----BEGIN CERTIFICATE-----\nQQcoisa"
