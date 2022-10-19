@@ -6,7 +6,7 @@ rootCA:
   baltimore:
     type: url
     source: https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt.pem
-  local:
+  private_ca:
     type: local
     bundle: |
       -----BEGIN CERTIFICATE-----
