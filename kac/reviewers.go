@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"k8s.io/client-go/kubernetes"
+	"log"
 	"os"
 	"strings"
 
@@ -95,6 +96,8 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 	if val, ok := pod.Annotations[config.Annotations.Inject]; ok {
 
 		bundles := strings.Split(val, ",")
+		log.Printf("Adding bundles %s to pod %s/%s", bundles, namespace, pod.Name)
+
 		clientSet, err := getKubernetesClientSet(ctx)
 		if err != nil {
 			return nil, err
@@ -106,8 +109,10 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 
 			// Create configmap if not found
 			if configMap == nil || configMap.Name == "" {
+				log.Printf("Creating bundles configmap on %s", namespace)
 				_, err = createConfigMap(ctx, clientSet, namespace, bundle, config)
 			} else if configMap.Data[bundle] != config.RootCA[bundle].Bundle {
+				log.Printf("Updating bundle %s on %s", bundle, namespace)
 				configMap.Data[bundle] = config.RootCA[bundle].Bundle
 				_, err = clientSet.CoreV1().ConfigMaps(fmt.Sprint(namespace)).Update(ctx, configMap, metav1.UpdateOptions{})
 			}
@@ -117,6 +122,7 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 		}
 
 		// Add Volume to new pod
+		log.Printf("Adding bundles volume to %s/%s", namespace, pod.Name)
 		newPod.Spec.Volumes = append(newPod.Spec.Volumes, corev1.Volume{
 			Name: config.ConfigMapName,
 			VolumeSource: corev1.VolumeSource{
@@ -130,16 +136,15 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 
 		for i := range newPod.Spec.Containers {
 			for _, b := range bundles {
+				log.Printf("Adding bundle %s volume mount to %s/%s", b, namespace, pod.Name)
 				newPod.Spec.Containers[i].VolumeMounts = append(newPod.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
 					Name:      config.ConfigMapName,
-					MountPath: fmt.Sprintf(`/etc/ssl/certs/%s.pem`, b),
+					MountPath: fmt.Sprintf("/etc/ssl/certs/%s.pem", b),
 					SubPath:   b,
 				})
 			}
 		}
-
 		newPod.ObjectMeta.Annotations[config.Annotations.Injected] = "true"
-
 	}
 
 	// Create mutation patch

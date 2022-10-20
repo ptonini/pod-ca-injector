@@ -1,15 +1,17 @@
 docker_build(
-    'kac-ca-injector',
-    context = '.'
+    'pod-ca-injector',
+    context = '.',
+    ignore = ['demo/test_pod.yaml']
 )
 
 k8s_yaml([
     './demo/namespace.yaml',
-    './demo/secret.yaml',
-    './demo/clusterrole.yaml',
-    './demo/clusterrolebinding.yaml',
-    './demo/webhook.yaml',
-    './demo/service.yaml',
-    './demo/serviceaccount.yaml',
-    './demo/deployment.yaml',
+    './demo/injector-secret.yaml',
+    './demo/injector-clusterrole.yaml',
+    './demo/injector-clusterrolebinding.yaml',
+    './demo/injector-webhook.yaml',
+    './demo/injector-service.yaml',
+    './demo/injector-configmap.yaml',
+    './demo/injector-serviceaccount.yaml',
+    './demo/injector-deployment.yaml',
 ])
