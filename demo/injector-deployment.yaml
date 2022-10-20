@@ -27,7 +27,7 @@ spec:
             port: 8443
             scheme: HTTPS
           initialDelaySeconds: 3
-        name: ca-injector
+        name: pod-ca-injector
         ports:
           - containerPort: 8443
             protocol: TCP
