@@ -45,6 +45,7 @@ type Config struct {
 }
 
 func LoadConfig(configFile string) {
+	log.Printf("Loding config")
 	err := readConfig(configFile)
 	if err != nil {
 		log.Fatal(err)
@@ -76,11 +77,13 @@ func fetchBundles() error {
 		var bundle string
 		switch v.Type {
 		case "url":
+			log.Printf("Fetching bundle %s from %s", k, v.Source)
 			bundle, err = getBundleFromURL(v.Source)
 			if err != nil {
 				return err
 			}
 		case "local":
+			log.Printf("Fetching bundle %s from local config", k)
 			if err = validateCertificate(v.Bundle); err == nil {
 				bundle = v.Bundle
 			} else {
