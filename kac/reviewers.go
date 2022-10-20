@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"log"
 	"os"
+	"sigs.k8s.io/yaml"
 	"strings"
 
 	admissionv1 "k8s.io/api/admission/v1"
@@ -85,6 +86,14 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 	}
 	pod := obj.(*corev1.Pod)
 	newPod := pod.DeepCopy()
+
+	y, err := yaml.Marshal(pod)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("deployment print in yaml: ")
+
+	log.Printf("%v", string(y))
 
 	// If the pod is in the same namespace as the webhook, the namespace
 	// will be empty and must be manually set

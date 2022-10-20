@@ -1,3 +1,23 @@
+#apiVersion: apps/v1
+#kind: Deployment
+#metadata:
+#  name: nginx
+#  namespace: default
+#spec:
+#  selector:
+#    matchLabels:
+#      app: ca-injector
+#  template:
+#    metadata:
+#      labels:
+#        app: ca-injector
+#      annotations:
+#        "ptonini.github.io/inject-ca": baltimore
+#    spec:
+#      containers:
+#        - name: nginx
+#          image: nginx
+
 apiVersion: v1
 kind: Pod
 metadata:
