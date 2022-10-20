@@ -87,13 +87,11 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 	pod := obj.(*corev1.Pod)
 	newPod := pod.DeepCopy()
 
-	y, err := yaml.Marshal(pod)
+	y, err := yaml.Marshal(ar)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("deployment print in yaml: ")
-
-	log.Printf("%v", string(y))
+	log.Printf("\n%v", string(y))
 
 	// If the pod is in the same namespace as the webhook, the namespace
 	// will be empty and must be manually set
