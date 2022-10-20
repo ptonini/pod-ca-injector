@@ -24,17 +24,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"k8s.io/client-go/kubernetes"
 	"log"
-	"os"
 	"strings"
 
+	"github.com/wI2L/jsondiff"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"github.com/wI2L/jsondiff"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -86,17 +84,12 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 	pod := obj.(*corev1.Pod)
 	newPod := pod.DeepCopy()
 
-	// If the pod is in the same namespace as the webhook, the namespace
-	// will be empty and must be manually set
-	namespace := pod.Namespace
-	if namespace == "" {
-		namespace = os.Getenv(keyPodNamespace)
-	}
+	namespace := ar.Request.Namespace
 
 	if val, ok := pod.Annotations[config.Annotations.Inject]; ok {
 
 		bundles := strings.Split(val, ",")
-		log.Printf("Adding bundles %s to pod %s/%s", bundles, namespace, pod.Name)
+		log.Printf("Adding bundles %s to pod %s/%s%s", bundles, namespace, pod.GenerateName, pod.Name)
 
 		clientSet, err := getKubernetesClientSet(ctx)
 		if err != nil {
@@ -109,10 +102,10 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 
 			// Create configmap if not found
 			if configMap == nil || configMap.Name == "" {
-				log.Printf("Creating bundles configmap on %s", namespace)
+				log.Printf("Creating bundles configmap on %s with %s", namespace, bundle)
 				_, err = createConfigMap(ctx, clientSet, namespace, bundle, config)
 			} else if configMap.Data[bundle] != config.RootCA[bundle].Bundle {
-				log.Printf("Updating bundle %s on %s", bundle, namespace)
+				log.Printf("Adding/Updating bundle %s on %s", bundle, namespace)
 				configMap.Data[bundle] = config.RootCA[bundle].Bundle
 				_, err = clientSet.CoreV1().ConfigMaps(fmt.Sprint(namespace)).Update(ctx, configMap, metav1.UpdateOptions{})
 			}
@@ -122,7 +115,7 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 		}
 
 		// Add Volume to new pod
-		log.Printf("Adding bundles volume to %s/%s", namespace, pod.Name)
+		log.Printf("Adding bundles volume to %s/%s%s", namespace, pod.GenerateName, pod.Name)
 		newPod.Spec.Volumes = append(newPod.Spec.Volumes, corev1.Volume{
 			Name: config.ConfigMapName,
 			VolumeSource: corev1.VolumeSource{
@@ -136,7 +129,7 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 
 		for i := range newPod.Spec.Containers {
 			for _, b := range bundles {
-				log.Printf("Adding bundle %s volume mount to %s/%s", b, namespace, pod.Name)
+				log.Printf("Adding bundle %s volume mount to %s/%s%s", b, namespace, pod.GenerateName, pod.Name)
 				newPod.Spec.Containers[i].VolumeMounts = append(newPod.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
 					Name:      config.ConfigMapName,
 					MountPath: fmt.Sprintf("/etc/ssl/certs/%s.pem", b),
