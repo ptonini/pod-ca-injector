@@ -3,7 +3,7 @@
     ".": {
       "release-type": "go",
       "extra-files": [
-        "Dockerfile",
+        "Dockerfile"
       ]
     }
   }
