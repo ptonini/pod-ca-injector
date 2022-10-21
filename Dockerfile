@@ -8,7 +8,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ser
 
 FROM gcr.io/distroless/static-debian11
 # x-release-please-start-version
-ENV VERSION="0.0.0"
+ENV VERSION="1.0.0"
 # x-release-please-end
 
 COPY --from=build /app/serverd /

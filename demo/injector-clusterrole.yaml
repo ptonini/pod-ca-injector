@@ -3,12 +3,17 @@ kind: ClusterRole
 metadata:
   name: ca-injector
 rules:
-- apiGroups:
-  - ''
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - read
-  - create
-  - update
+  - apiGroups:
+      - ''
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - create
+      - update
+  - apiGroups:
+      - ''
+    resources:
+      - secrets
+    verbs:
+      - get
