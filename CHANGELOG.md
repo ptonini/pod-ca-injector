@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/ptonini/pod-ca-injector/compare/v1.0.0...v1.1.0) (2022-10-21)
+
+
+### Features
+
+* added support for secrets and configmaps as rootca sources ([30a2eed](https://github.com/ptonini/pod-ca-injector/commit/30a2eedaecef1db54fdb480586385a16f08ed401))
+
 ## 1.0.0 (2022-10-19)
 
 
