@@ -14,11 +14,7 @@ spec:
         app: ca-injector
     spec:
       containers:
-      - env:
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: "metadata.namespace"
+      - name: pod-ca-injector
         image: pod-ca-injector
         imagePullPolicy: IfNotPresent
         livenessProbe:
@@ -27,7 +23,6 @@ spec:
             port: 8443
             scheme: HTTPS
           initialDelaySeconds: 3
-        name: pod-ca-injector
         ports:
           - containerPort: 8443
             protocol: TCP
