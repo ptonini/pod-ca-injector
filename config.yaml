@@ -6,9 +6,6 @@ rootCA:
   baltimore:
     type: url
     source: https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt.pem
-  kube:
-    type: configMap
-    source: kube-system/kube-root-ca.crt/ca.crt
   private:
     type: local
     bundle: |
