@@ -17,7 +17,6 @@ func Test_Config(t *testing.T) {
 	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECT", "ptonini.github.io/inject-ca")
 	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECTED", "ptonini.github.io/ca-injected")
 	_ = os.Setenv("CA_INJECTOR_CONFIGMAP_NAME", "ca-injector")
-	_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "url", "source": "https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt.pem"}, "local": {"type": "local", "source": "-----BEGIN CERTIFICATE-----\nYYYYY\n-----END CERTIFICATE-----"}}`)
 
 	t.Run("test read valid config", func(t *testing.T) {
 		LoadConfig(configFile)
