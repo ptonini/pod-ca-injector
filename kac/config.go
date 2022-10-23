@@ -139,7 +139,8 @@ func getCAFromSecret(ctx context.Context, ns string, secretName string, key stri
 		return "", err
 	}
 	secret, _ := clientSet.CoreV1().Secrets(ns).Get(ctx, secretName, v1.GetOptions{})
-	certificate := base64.StdEncoding.EncodeToString(secret.Data[key])
+	certificateBytes, _ := base64.StdEncoding.DecodeString(string(secret.Data[key]))
+	certificate := string(certificateBytes)
 	return certificate, validateCertificate(certificate)
 }
 

@@ -18,12 +18,6 @@ import (
 )
 
 var (
-	configMap = &corev1.ConfigMap{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "ConfigMap",
-		},
-	}
 	configMapsGVR = metav1.GroupVersionResource{
 		Version:  "v1",
 		Resource: "ConfigMaps",
@@ -145,7 +139,7 @@ func Test_ReviewerRoutes(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
 
-	ctx = context.WithValue(ctx, keyFake, true)
+	ctx = context.WithValue(ctx, keyFakeClientSet, true)
 
 	t.Run("test route /mutate with valid request missing namespace", func(t *testing.T) {
 		pod.Namespace = ""
