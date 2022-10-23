@@ -4,7 +4,9 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o serverd main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o serverd main.go && \
+    mkdir /config && \
+    touch /config/config.yaml
 
 FROM gcr.io/distroless/static-debian11
 # x-release-please-start-version
@@ -12,7 +14,8 @@ ENV VERSION="1.1.0"
 # x-release-please-end
 
 COPY --from=build /app/serverd /
-RUN mkdir/config && touch /config/config.yaml
+COPY --from=build /config /
+
 EXPOSE 8443
 
 CMD ["/serverd"]
