@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+const configFile = "../config.yaml"
+
 func Test_Config(t *testing.T) {
 
 	ctx := context.Background()
@@ -18,11 +20,10 @@ func Test_Config(t *testing.T) {
 	_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "url", "source": "https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt.pem"}, "local": {"type": "local", "source": "-----BEGIN CERTIFICATE-----\nYYYYY\n-----END CERTIFICATE-----"}}`)
 
 	t.Run("test read valid config", func(t *testing.T) {
-		assert.NoError(t, readConfig("../config.yaml"))
-	})
-
-	t.Run("test valid config", func(t *testing.T) {
-		assert.NoError(t, fetchBundles(ctx))
+		LoadConfig(configFile)
+		StartConfigWatch(configFile)
+		_, err := getConfig()
+		assert.NoError(t, err)
 	})
 
 	t.Run("test config with invalid bundle url", func(t *testing.T) {
