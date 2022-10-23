@@ -12,6 +12,7 @@ ENV VERSION="1.1.0"
 # x-release-please-end
 
 COPY --from=build /app/serverd /
+RUN mkdir/config && touch /config/config.yaml
 EXPOSE 8443
 
 CMD ["/serverd"]

@@ -54,7 +54,7 @@ func createConfigMap(ctx context.Context, c kubernetes.Interface, ns string, bun
 			Namespace: ns,
 		},
 		Data: map[string]string{
-			bundleName: config.RootCA[bundleName].Bundle,
+			bundleName: config.Bundles[bundleName],
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {
@@ -104,9 +104,9 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 			if configMap == nil || configMap.Name == "" {
 				log.Printf("Creating bundles configmap on %s with %s", namespace, bundle)
 				_, err = createConfigMap(ctx, clientSet, namespace, bundle, config)
-			} else if configMap.Data[bundle] != config.RootCA[bundle].Bundle {
+			} else if configMap.Data[bundle] != config.Bundles[bundle] {
 				log.Printf("Adding/Updating bundle %s on %s", bundle, namespace)
-				configMap.Data[bundle] = config.RootCA[bundle].Bundle
+				configMap.Data[bundle] = config.Bundles[bundle]
 				_, err = clientSet.CoreV1().ConfigMaps(fmt.Sprint(namespace)).Update(ctx, configMap, metav1.UpdateOptions{})
 			}
 			if err != nil {

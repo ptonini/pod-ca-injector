@@ -23,6 +23,7 @@ package kac
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -43,8 +44,8 @@ type Config struct {
 	RootCA        map[string]struct {
 		Type   string
 		Source string
-		Bundle string
 	}
+	Bundles map[string]string
 }
 
 func LoadConfig(configFile string) {
@@ -70,8 +71,10 @@ func StartConfigWatch(configFile string) {
 func readConfig(configFile string) error {
 	viper.SetConfigName(strings.Split(filepath.Base(configFile), ".")[0])
 	viper.AddConfigPath(filepath.Dir(configFile))
-	viper.SetEnvPrefix("CA_INJECTOR")
-	viper.AutomaticEnv()
+	viper.MustBindEnv("configmapname", "CA_INJECTOR_CONFIGMAP_NAME")
+	viper.MustBindEnv("annotations.inject", "CA_INJECTOR_ANNOTATIONS_INJECT")
+	viper.MustBindEnv("annotations.injected", "CA_INJECTOR_ANNOTATIONS_INJECTED")
+	viper.MustBindEnv("rootca", "CA_INJECTOR_ROOTCA")
 	return viper.ReadInConfig()
 }
 
@@ -82,8 +85,8 @@ func fetchBundles(ctx context.Context) error {
 		log.Printf("Fetching bundle %s from %s: %s", k, v.Type, v.Source)
 		switch v.Type {
 		case "local":
-			if err = validateCertificate(v.Bundle); err == nil {
-				bundle = v.Bundle
+			if err = validateCertificate(v.Source); err == nil {
+				bundle = v.Source
 			} else {
 				return err
 			}
@@ -105,7 +108,7 @@ func fetchBundles(ctx context.Context) error {
 				return err
 			}
 		}
-		viper.Set(fmt.Sprintf(`rootCA.%s.Bundle`, k), bundle)
+		viper.Set(fmt.Sprintf(`bundles.%s`, k), bundle)
 	}
 	return err
 }
@@ -113,6 +116,9 @@ func fetchBundles(ctx context.Context) error {
 func getConfig() (*Config, error) {
 	var config Config
 	err := viper.Unmarshal(&config)
+	if err != nil {
+		err = json.Unmarshal([]byte(viper.Get("rootca").(string)), &config.RootCA)
+	}
 	return &config, err
 }
 
