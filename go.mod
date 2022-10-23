@@ -3,7 +3,6 @@ module github.com/ptonini/pod-ca-injector
 go 1.18
 
 require (
-	github.com/allegro/bigcache/v3 v3.0.2
 	github.com/gin-gonic/gin v1.8.1
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0

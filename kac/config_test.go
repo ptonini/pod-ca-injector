@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
@@ -11,9 +12,10 @@ func Test_Config(t *testing.T) {
 
 	ctx := context.Background()
 
-	t.Run("test read invalid file", func(t *testing.T) {
-		assert.Error(t, readConfig("../config2.yaml"))
-	})
+	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECT", "ptonini.github.io/inject-ca")
+	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECTED", "ptonini.github.io/ca-injected")
+	_ = os.Setenv("CA_INJECTOR_CONFIGMAP_NAME", "ca-injector")
+	_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "url", "source": "https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt.pem"}, "local": {"type": "local", "source": "-----BEGIN CERTIFICATE-----\nYYYYY\n-----END CERTIFICATE-----"}}`)
 
 	t.Run("test read valid config", func(t *testing.T) {
 		assert.NoError(t, readConfig("../config.yaml"))
@@ -24,17 +26,23 @@ func Test_Config(t *testing.T) {
 	})
 
 	t.Run("test config with invalid bundle url", func(t *testing.T) {
-		viper.Set("rootCA.baltimore.source", "https://invalid.local")
+		viper.Set("bundles", nil)
+		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "url", "source": "https://invalid.local"}}`)
+		_ = readConfig("../config.yaml")
 		assert.Error(t, fetchBundles(ctx))
 	})
 
 	t.Run("test config with invalid bundle content", func(t *testing.T) {
-		viper.Set("rootCA.baltimore.source", "https://example.com")
+		viper.Set("bundles", nil)
+		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "url", "source": "https://example.com"}}`)
+		_ = readConfig("../config.yaml")
 		assert.Error(t, fetchBundles(ctx))
 	})
 
 	t.Run("test config with invalid local content", func(t *testing.T) {
-		viper.Set("rootCA.local.bundle", "invalid")
+		viper.Set("bundles", nil)
+		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"local": {"type": "local", "source": "invalid"}}`)
+		_ = readConfig("../config.yaml")
 		assert.Error(t, fetchBundles(ctx))
 	})
 

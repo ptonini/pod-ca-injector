@@ -85,6 +85,10 @@ func Test_ReviewerRoutes(t *testing.T) {
 	ctx := context.Background()
 	router := NewRouter()
 
+	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECT", "ptonini.github.io/inject-ca")
+	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECTED", "ptonini.github.io/ca-injected")
+	_ = os.Setenv("CA_INJECTOR_CONFIGMAP_NAME", "ca-injector")
+	_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"baltimore": {"type": "url", "source": "https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt.pem"}}`)
 	_ = readConfig("../config.yaml")
 	config, _ := getConfig()
 
