@@ -79,26 +79,18 @@ func fetchBundles(ctx context.Context) error {
 		case "local":
 			if err = validateCertificate(v.Source); err == nil {
 				bundle = v.Source
-			} else {
-				return err
 			}
 		case "url":
 			bundle, err = getBundleFromURL(v.Source)
-			if err != nil {
-				return err
-			}
 		case "secret":
 			s := strings.Split(v.Source, "/")
 			bundle, err = getCAFromSecret(ctx, s[0], s[1], s[2])
-			if err != nil {
-				return err
-			}
 		case "configMap":
 			s := strings.Split(v.Source, "/")
 			bundle, err = getCAFromConfigMap(ctx, s[0], s[1], s[2])
-			if err != nil {
-				return err
-			}
+		}
+		if err != nil {
+			return err
 		}
 		viper.Set(fmt.Sprintf(`bundles.%s`, k), bundle)
 	}
