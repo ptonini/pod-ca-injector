@@ -26,7 +26,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,13 +58,6 @@ func LoadConfig(configFile string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func StartConfigWatch(configFile string) {
-	viper.OnConfigChange(func(in fsnotify.Event) {
-		LoadConfig(configFile)
-	})
-	viper.WatchConfig()
 }
 
 func readConfig(configFile string) error {
@@ -142,10 +134,7 @@ func getCAFromSecret(ctx context.Context, ns string, secretName string, key stri
 	if err != nil {
 		return "", err
 	}
-	certificateBytes, err := base64.StdEncoding.DecodeString(string(secret.Data[key]))
-	if err != nil {
-		return "", err
-	}
+	certificateBytes, _ := base64.StdEncoding.DecodeString(string(secret.Data[key]))
 	certificate := string(certificateBytes)
 	return certificate, validateCertificate(certificate)
 }
