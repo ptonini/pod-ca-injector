@@ -40,7 +40,8 @@ import (
 )
 
 const (
-	keyFake = "fake"
+	keyFakeClientSet = "fakeClientSet"
+	keyFakeObjects   = "fakeObjects"
 )
 
 var (
@@ -79,8 +80,12 @@ func validateAndDeserialize(ar admissionv1.AdmissionReview, expectedGVR metav1.G
 }
 
 func getKubernetesClientSet(ctx context.Context) (kubernetes.Interface, error) {
-	if ctx.Value(keyFake) != nil && ctx.Value(keyFake).(bool) {
-		c := fake.NewSimpleClientset()
+	if ctx.Value(keyFakeClientSet) != nil && ctx.Value(keyFakeClientSet).(bool) {
+		var objList []runtime.Object
+		if ctx.Value(keyFakeObjects) != nil {
+			objList = ctx.Value(keyFakeObjects).([]runtime.Object)
+		}
+		c := fake.NewSimpleClientset(objList...)
 		return c, nil
 	} else {
 		config, err := rest.InClusterConfig()

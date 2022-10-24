@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -50,12 +51,11 @@ type Config struct {
 
 func LoadConfig(configFile string) {
 	log.Printf("Loding config")
-	ctx := context.Background()
 	err := readConfig(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = fetchBundles(ctx)
+	err = fetchBundles(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func fetchBundles(ctx context.Context) error {
 	config, err := getConfig()
 	for k, v := range config.RootCA {
 		var bundle string
-		log.Printf("Fetching bundle %s from %s: %s", k, v.Type, v.Source)
+		log.Printf("Fetching bundle %s from %s: %q", k, v.Type, v.Source)
 		switch v.Type {
 		case "local":
 			if err = validateCertificate(v.Source); err == nil {
@@ -138,8 +138,15 @@ func getCAFromSecret(ctx context.Context, ns string, secretName string, key stri
 	if err != nil {
 		return "", err
 	}
-	secret, _ := clientSet.CoreV1().Secrets(ns).Get(ctx, secretName, v1.GetOptions{})
-	certificate := base64.StdEncoding.EncodeToString(secret.Data[key])
+	secret, err := clientSet.CoreV1().Secrets(ns).Get(ctx, secretName, v1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	certificateBytes, err := base64.StdEncoding.DecodeString(string(secret.Data[key]))
+	if err != nil {
+		return "", err
+	}
+	certificate := string(certificateBytes)
 	return certificate, validateCertificate(certificate)
 }
 
@@ -148,15 +155,18 @@ func getCAFromConfigMap(ctx context.Context, ns string, configMapName string, ke
 	if err != nil {
 		return "", err
 	}
-	configMap, _ := clientSet.CoreV1().ConfigMaps(ns).Get(ctx, configMapName, v1.GetOptions{})
+	configMap, err := clientSet.CoreV1().ConfigMaps(ns).Get(ctx, configMapName, v1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
 	certificate := configMap.Data[key]
 	return certificate, validateCertificate(certificate)
 }
 
 func validateCertificate(bundle string) error {
-	if strings.Contains(bundle, "-----BEGIN CERTIFICATE-----") {
-		return nil
-	} else {
+	block, _ := pem.Decode([]byte(bundle))
+	if block == nil || block.Type != "CERTIFICATE" {
 		return fmt.Errorf("invalid certificate")
 	}
+	return nil
 }
