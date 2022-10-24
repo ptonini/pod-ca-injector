@@ -40,7 +40,7 @@ import (
 )
 
 const (
-	keyFakeClientSet = false
+	keyFakeClientSet = "fakeClientSet"
 	keyFakeObjects   = "fakeObjects"
 )
 

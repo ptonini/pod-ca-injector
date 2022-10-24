@@ -37,6 +37,11 @@ var (
 			},
 		},
 	}
+	rootCA = `{
+  "test-url": {"type": "url", "source": "https://curl.se/ca/cacert.pem"},
+  "test-configmap": {"type": "configMap", "source": "default/test-config/cert.crt"}
+}
+`
 )
 
 func admissionReviewFactory(gvr metav1.GroupVersionResource, obj interface{}) string {
@@ -77,16 +82,20 @@ func Test_HealthcheckRoute(t *testing.T) {
 func Test_ReviewerRoutes(t *testing.T) {
 
 	ctx := context.Background()
+	ctx = context.WithValue(ctx, keyFakeClientSet, false)
+	ctx = context.WithValue(ctx, keyFakeObjects, []runtime.Object{configMap, secret})
+
 	router := NewRouter()
 
 	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECT", "ptonini.github.io/inject-ca")
 	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECTED", "ptonini.github.io/ca-injected")
 	_ = os.Setenv("CA_INJECTOR_CONFIGMAP_NAME", "ca-injector")
-	_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"baltimore": {"type": "url", "source": "https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt.pem"}}`)
+	_ = os.Setenv("CA_INJECTOR_ROOTCA", rootCA)
 	_ = readConfig("../config.yaml")
+	_ = fetchBundles(ctx)
 	config, _ := getConfig()
 
-	pod.Annotations = map[string]string{config.Annotations.Inject: "baltimore"}
+	pod.Annotations = map[string]string{config.Annotations.Inject: "test-url,test-configmap,test-secret"}
 	pod.Namespace = os.Getenv(keyPodNamespace)
 
 	for _, route := range []string{"/mutate", "/validate"} {
@@ -127,7 +136,7 @@ func Test_ReviewerRoutes(t *testing.T) {
 
 	t.Run("test route /mutate with valid request missing annotation", func(t *testing.T) {
 		pod.Annotations = map[string]string{}
-		defer func() { pod.Annotations = map[string]string{config.Annotations.Inject: "baltimore"} }()
+		defer func() { pod.Annotations = map[string]string{config.Annotations.Inject: "test-url,test-configmap,test-secret"} }()
 		body := admissionReviewFactory(podsGVR, pod)
 		w := fakeRequest(ctx, router, http.MethodPost, "/mutate", body)
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -140,6 +149,7 @@ func Test_ReviewerRoutes(t *testing.T) {
 	})
 
 	ctx = context.WithValue(ctx, keyFakeClientSet, true)
+	_ = fetchBundles(ctx)
 
 	t.Run("test route /mutate with valid request missing namespace", func(t *testing.T) {
 		pod.Namespace = ""

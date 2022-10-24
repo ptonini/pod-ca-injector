@@ -102,7 +102,7 @@ func mutationReviewer(ctx context.Context, ar admissionv1.AdmissionReview) (*adm
 
 			// Create configmap if not found
 			if configMap == nil || configMap.Name == "" {
-				log.Printf("Creating bundles configmap on %s with %s", namespace, bundle)
+				log.Printf("Creating bundles configmap on %s", namespace)
 				_, err = createConfigMap(ctx, clientSet, namespace, bundle, config)
 			} else if configMap.Data[bundle] != config.Bundles[bundle] {
 				log.Printf("Adding/Updating bundle %s on %s", bundle, namespace)

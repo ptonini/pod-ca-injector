@@ -138,8 +138,14 @@ func getCAFromSecret(ctx context.Context, ns string, secretName string, key stri
 	if err != nil {
 		return "", err
 	}
-	secret, _ := clientSet.CoreV1().Secrets(ns).Get(ctx, secretName, v1.GetOptions{})
-	certificateBytes, _ := base64.StdEncoding.DecodeString(string(secret.Data[key]))
+	secret, err := clientSet.CoreV1().Secrets(ns).Get(ctx, secretName, v1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	certificateBytes, err := base64.StdEncoding.DecodeString(string(secret.Data[key]))
+	if err != nil {
+		return "", err
+	}
 	certificate := string(certificateBytes)
 	return certificate, validateCertificate(certificate)
 }
@@ -149,7 +155,10 @@ func getCAFromConfigMap(ctx context.Context, ns string, configMapName string, ke
 	if err != nil {
 		return "", err
 	}
-	configMap, _ := clientSet.CoreV1().ConfigMaps(ns).Get(ctx, configMapName, v1.GetOptions{})
+	configMap, err := clientSet.CoreV1().ConfigMaps(ns).Get(ctx, configMapName, v1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
 	certificate := configMap.Data[key]
 	return certificate, validateCertificate(certificate)
 }

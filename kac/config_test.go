@@ -97,6 +97,20 @@ func Test_Config(t *testing.T) {
 		assert.NoError(t, fetchBundles(ctx))
 	})
 
+	t.Run("test valid config from nonexistant secret", func(t *testing.T) {
+		viper.Set("bundles", nil)
+		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "secret", "source": "default/fake/cert.crt"}}`)
+		_ = readConfig("../config.yaml")
+		assert.Error(t, fetchBundles(ctx))
+	})
+
+	t.Run("test valid config from nonexistant secret", func(t *testing.T) {
+		viper.Set("bundles", nil)
+		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "configMap", "source": "default/fake/cert.crt"}}`)
+		_ = readConfig("../config.yaml")
+		assert.Error(t, fetchBundles(ctx))
+	})
+
 	t.Run("test config with invalid bundle url", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "url", "source": "https://invalid.local"}}`)
