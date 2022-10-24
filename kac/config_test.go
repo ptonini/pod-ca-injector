@@ -78,7 +78,6 @@ func Test_Config(t *testing.T) {
 
 	t.Run("test read config from file", func(t *testing.T) {
 		LoadConfig(configFile)
-		StartConfigWatch(configFile)
 		_, err := getConfig()
 		assert.NoError(t, err)
 	})
@@ -95,6 +94,20 @@ func Test_Config(t *testing.T) {
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "secret", "source": "default/test-secret/cert.crt"}}`)
 		_ = readConfig("../config.yaml")
 		assert.NoError(t, fetchBundles(ctx))
+	})
+
+	t.Run("test valid config from configmap, no fake client", func(t *testing.T) {
+		viper.Set("bundles", nil)
+		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "configMap", "source": "default/test-configmap/cert.crt"}}`)
+		_ = readConfig("../config.yaml")
+		assert.Error(t, fetchBundles(context.WithValue(ctx, keyFakeClientSet, false)))
+	})
+
+	t.Run("test valid config from secret, no fake client", func(t *testing.T) {
+		viper.Set("bundles", nil)
+		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "secret", "source": "default/test-secret/cert.crt"}}`)
+		_ = readConfig("../config.yaml")
+		assert.Error(t, fetchBundles(context.WithValue(ctx, keyFakeClientSet, false)))
 	})
 
 	t.Run("test valid config from nonexistant secret", func(t *testing.T) {

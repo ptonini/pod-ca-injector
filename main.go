@@ -22,6 +22,8 @@ package main
 
 import (
 	"flag"
+	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/viper"
 	"log"
 
 	"github.com/ptonini/pod-ca-injector/kac"
@@ -35,7 +37,10 @@ func main() {
 	flag.Parse()
 
 	kac.LoadConfig(configFile)
-	kac.StartConfigWatch(configFile)
+	viper.OnConfigChange(func(in fsnotify.Event) {
+		kac.LoadConfig(configFile)
+	})
+	viper.WatchConfig()
 
 	log.Printf("Server started")
 	router := kac.NewRouter()
