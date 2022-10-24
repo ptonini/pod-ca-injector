@@ -15,6 +15,7 @@ ENV VERSION="1.2.0"
 
 COPY --from=build /app/serverd /
 COPY --from=build /config /
+COPY --from=build /config/config.yaml /config/config.yaml
 
 EXPOSE 8443
 
