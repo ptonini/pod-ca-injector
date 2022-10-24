@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/ptonini/pod-ca-injector/compare/v1.1.0...v1.2.0) (2022-10-24)
+
+
+### Features
+
+* added environment variables configuration ([258f3d3](https://github.com/ptonini/pod-ca-injector/commit/258f3d3586b2ec266ea470fb659386dcd1912833))
+* added environment variables configuration ([afaa83e](https://github.com/ptonini/pod-ca-injector/commit/afaa83e02e633aa6e704742ad79cac3f231d10d6))
+
+
+### Bug Fixes
+
+* corrected secret decoding ([c79ae47](https://github.com/ptonini/pod-ca-injector/commit/c79ae47330d354bd86a3e13e6c4160603ed310b2))
+
 ## [1.1.0](https://github.com/ptonini/pod-ca-injector/compare/v1.0.0...v1.1.0) (2022-10-21)
 
 
