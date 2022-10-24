@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/ptonini/pod-ca-injector/compare/v1.2.0...v1.2.1) (2022-10-24)
+
+
+### Bug Fixes
+
+* added config.yaml to container image ([cf24a9c](https://github.com/ptonini/pod-ca-injector/commit/cf24a9ce8af65fa6dcb53bf4995ec304786da1bf))
+
 ## [1.2.0](https://github.com/ptonini/pod-ca-injector/compare/v1.1.0...v1.2.0) (2022-10-24)
 
 
