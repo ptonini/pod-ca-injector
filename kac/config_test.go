@@ -3,6 +3,7 @@ package kac
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -38,6 +39,10 @@ H9cXQE2NR3ZgAdEWuN5E9M5DA4NufOdEn106iEVloLNlGJ1JA8IyRwn4hRlX9RYa
 )
 
 var (
+	testRootCa = fmt.Sprintf(`{
+  "test-url": {"type": "url", "source": "https://curl.se/ca/cacert.pem"}, 
+  "test-local": {"type": "local", "source": %q }
+}`, testCertificate)
 	configMap = &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -75,8 +80,9 @@ func Test_Config(t *testing.T) {
 	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECT", "ptonini.github.io/inject-ca")
 	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECTED", "ptonini.github.io/ca-injected")
 	_ = os.Setenv("CA_INJECTOR_CONFIGMAP_NAME", "ca-injector")
+	_ = os.Setenv("CA_INJECTOR_ROOTCA", testRootCa)
 
-	t.Run("test read config from file", func(t *testing.T) {
+	t.Run("test read config", func(t *testing.T) {
 		LoadConfig(configFile)
 		_, err := getConfig()
 		assert.NoError(t, err)
@@ -117,7 +123,7 @@ func Test_Config(t *testing.T) {
 		assert.Error(t, fetchBundles(ctx))
 	})
 
-	t.Run("test valid config from nonexistant secret", func(t *testing.T) {
+	t.Run("test valid config from nonexistant configMap", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "configMap", "source": "default/fake/cert.crt"}}`)
 		_ = readConfig("../config.yaml")

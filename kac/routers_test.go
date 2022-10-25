@@ -37,11 +37,6 @@ var (
 			},
 		},
 	}
-	rootCA = `{
-  "test-url": {"type": "url", "source": "https://curl.se/ca/cacert.pem"},
-  "test-configmap": {"type": "configMap", "source": "default/test-config/cert.crt"}
-}
-`
 )
 
 func admissionReviewFactory(gvr metav1.GroupVersionResource, obj interface{}) string {
@@ -52,7 +47,8 @@ func admissionReviewFactory(gvr metav1.GroupVersionResource, obj interface{}) st
 			APIVersion: "admission.k8s.io/v1",
 		},
 		Request: &admissionv1.AdmissionRequest{
-			Resource: gvr,
+			Namespace: "default",
+			Resource:  gvr,
 			Object: runtime.RawExtension{
 				Raw: rawObject,
 			},
@@ -82,7 +78,6 @@ func Test_HealthcheckRoute(t *testing.T) {
 func Test_ReviewerRoutes(t *testing.T) {
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, keyFakeClientSet, false)
 	ctx = context.WithValue(ctx, keyFakeObjects, []runtime.Object{configMap, secret})
 
 	router := NewRouter()
@@ -90,13 +85,10 @@ func Test_ReviewerRoutes(t *testing.T) {
 	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECT", "ptonini.github.io/inject-ca")
 	_ = os.Setenv("CA_INJECTOR_ANNOTATIONS_INJECTED", "ptonini.github.io/ca-injected")
 	_ = os.Setenv("CA_INJECTOR_CONFIGMAP_NAME", "ca-injector")
-	_ = os.Setenv("CA_INJECTOR_ROOTCA", rootCA)
+	_ = os.Setenv("CA_INJECTOR_ROOTCA", testRootCa)
 	_ = readConfig("../config.yaml")
 	_ = fetchBundles(ctx)
 	config, _ := getConfig()
-
-	pod.Annotations = map[string]string{config.Annotations.Inject: "test-url,test-configmap,test-secret"}
-	pod.Namespace = os.Getenv(keyPodNamespace)
 
 	for _, route := range []string{"/mutate", "/validate"} {
 		t.Run("test route "+route+" with nil body", func(t *testing.T) {
@@ -135,12 +127,12 @@ func Test_ReviewerRoutes(t *testing.T) {
 	})
 
 	t.Run("test route /mutate with valid request missing annotation", func(t *testing.T) {
-		pod.Annotations = map[string]string{}
-		defer func() { pod.Annotations = map[string]string{config.Annotations.Inject: "test-url,test-configmap,test-secret"} }()
 		body := admissionReviewFactory(podsGVR, pod)
 		w := fakeRequest(ctx, router, http.MethodPost, "/mutate", body)
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
+
+	pod.Annotations = map[string]string{config.Annotations.Inject: "test-url,test-local"}
 
 	t.Run("test route /mutate with valid request, no fake client", func(t *testing.T) {
 		body := admissionReviewFactory(podsGVR, pod)
@@ -149,15 +141,6 @@ func Test_ReviewerRoutes(t *testing.T) {
 	})
 
 	ctx = context.WithValue(ctx, keyFakeClientSet, true)
-	_ = fetchBundles(ctx)
-
-	t.Run("test route /mutate with valid request missing namespace", func(t *testing.T) {
-		pod.Namespace = ""
-		defer func() { pod.Namespace = os.Getenv(keyPodNamespace) }()
-		body := admissionReviewFactory(podsGVR, pod)
-		w := fakeRequest(ctx, router, http.MethodPost, "/mutate", body)
-		assert.Equal(t, http.StatusOK, w.Code)
-	})
 
 	t.Run("test route /mutate with valid request", func(t *testing.T) {
 		body := admissionReviewFactory(podsGVR, pod)
