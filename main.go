@@ -36,10 +36,18 @@ func main() {
 	flag.StringVar(&configFile, "configFile", "/config/config.yaml", "Path to the TLS certificate")
 	flag.Parse()
 
-	kac.LoadConfig(configFile)
+	err := kac.LoadConfig(configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	viper.OnConfigChange(func(in fsnotify.Event) {
-		kac.LoadConfig(configFile)
+		err = kac.LoadConfig(configFile)
+		if err != nil {
+			log.Fatal(err)
+		}
 	})
+
 	viper.WatchConfig()
 
 	log.Printf("Server started")

@@ -48,16 +48,13 @@ type Config struct {
 	Bundles map[string]string
 }
 
-func LoadConfig(configFile string) {
+func LoadConfig(configFile string) error {
 	log.Printf("Loding config")
 	err := readConfig(configFile)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	err = fetchBundles(context.Background())
-	if err != nil {
-		log.Fatal(err)
-	}
+	return fetchBundles(context.Background())
 }
 
 func readConfig(configFile string) error {
