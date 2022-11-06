@@ -54,7 +54,7 @@ jobs:
     with:
       source_tag: pr-approved
       tag: ${{ needs.startup.outputs.release_version }}
-   
+  
   unit_tests:
     uses: ptonini/gha-workflows/.github/workflows/unit-tests.yaml@main
     if: needs.startup.outputs.skip_tests == 'false'
@@ -65,9 +65,8 @@ jobs:
     needs:
       - unit_tests
     secrets:
-      GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
+  
   code_linting:
     uses: ptonini/gha-workflows/.github/workflows/code-linting.yaml@main
     if: needs.startup.outputs.housekeeping == 'true'
