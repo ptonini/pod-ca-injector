@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ca-injector
+  name: kac
   namespace: example
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ca-injector
+      app: kac
   template:
     metadata:
       labels:
-        app: ca-injector
+        app: kac
     spec:
       containers:
-      - name: pod-ca-injector
-        image: pod-ca-injector
+      - name: kac
+        image: kac
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -37,11 +37,11 @@ spec:
             name: certs
           - mountPath: /config
             name: config
-      serviceAccountName: ca-injector
+      serviceAccountName: kac
       volumes:
         - name: certs
           secret:
-            secretName: ca-injector-certs
+            secretName: kac-certs
         - name: config
           configMap:
-            name: ca-injector-config
+            name: kac-config

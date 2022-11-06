@@ -1,0 +1,40 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kac
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNKakNDQVkrZ0F3SUJBZ0lVWVBUQ0FUK0Z3em1HRnNJTTRxZmtSVWxLeGVvd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0ZqRVVNQklHQTFVRUF3d0xaWGhoYlhCc1pTNWpiMjB3SUJjTk1qSXhNVEExTVRjeE1qQTVXaGdQTWpFeQpNakV3TVRJeE56RXlNRGxhTUJZeEZEQVNCZ05WQkFNTUMyVjRZVzF3YkdVdVkyOXRNSUdmTUEwR0NTcUdTSWIzCkRRRUJBUVVBQTRHTkFEQ0JpUUtCZ1FDK2ViSUU1bGw1L1pWSUlXTlhJN1NieW9yeXM0dkorczYyYVVaVWc1NzAKUzFDOENRL215VllOY0JGK2ZkY2ZYTlVSL09QUFhiZFBIdjBkRlJ1RlphSHFFeElLQ1l0NUhVUWxoQWhBTFRPagplNTJ2U3FPY2JuK0lhWjR2dFNmZ1pBQ2FFV0xTNGU1QjhpNitLVVdKN1NFVEszVjVJZkM1bHVwQStzOTZtL2RYClZRSURBUUFCbzI4d2JUQWRCZ05WSFE0RUZnUVVzZEVYOFE1b2Z2N2VCL3F6NThpSkZYc2MzTXN3SHdZRFZSMGoKQkJnd0ZvQVVzZEVYOFE1b2Z2N2VCL3F6NThpSkZYc2MzTXN3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFhQmdOVgpIUkVFRXpBUmdnOXJZV011WlhoaGJYQnNaUzV6ZG1Nd0RRWUpLb1pJaHZjTkFRRUxCUUFEZ1lFQUxXL2dNbW9RCm5rbjh0bEtLd3VuWTJ1TS9KVWtST0thUlQ1SnhoZDltWm9lTmhob29PME5ZcmtiaXcvSDErRkNTK3A4Vlo5UDAKTS9vQkxwQ2M2MTVqUnczOHhlYkVSSXFudi9zbVVVYUFuZVZ3UFE1UnRjclFQK1lNNTM4SEZKZVg5MXVBdFNOcgozaDViVkl4dnYwbTZuS3Q1MXM2UVVuMmZiMWVWMVE1QXUrMD0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    service:
+      name: kac
+      namespace: example
+      path: /mutate
+  failurePolicy: Ignore
+  matchPolicy: Equivalent
+  name: kac.example.svc
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: NotIn
+      values:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+  objectSelector:
+    matchExpressions:
+    - key: app
+      operator: NotIn
+      values:
+      - kac
+  rules:
+  - apiGroups:
+    - ''
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+  sideEffects: None
