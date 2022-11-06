@@ -82,69 +82,73 @@ func Test_Config(t *testing.T) {
 	_ = os.Setenv("CA_INJECTOR_CONFIGMAP_NAME", "ca-injector")
 	_ = os.Setenv("CA_INJECTOR_ROOTCA", testRootCa)
 
-	t.Run("test read config", func(t *testing.T) {
-		LoadConfig(configFile)
+	t.Run("missing config file", func(t *testing.T) {
+		assert.Error(t, LoadConfig("invalid"))
+	})
+
+	t.Run("read config", func(t *testing.T) {
+		_ = LoadConfig(configFile)
 		_, err := getConfig()
 		assert.NoError(t, err)
 	})
 
-	t.Run("test valid config from configmap", func(t *testing.T) {
+	t.Run("valid config from configmap", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "configMap", "source": "default/test-config/cert.crt"}}`)
 		_ = readConfig("../config.yaml")
 		assert.NoError(t, fetchBundles(ctx))
 	})
 
-	t.Run("test valid config from secret", func(t *testing.T) {
+	t.Run("valid config from secret", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "secret", "source": "default/test-secret/cert.crt"}}`)
 		_ = readConfig("../config.yaml")
 		assert.NoError(t, fetchBundles(ctx))
 	})
 
-	t.Run("test valid config from configmap, no fake client", func(t *testing.T) {
+	t.Run("valid config from configmap, no fake client", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "configMap", "source": "default/test-configmap/cert.crt"}}`)
 		_ = readConfig("../config.yaml")
 		assert.Error(t, fetchBundles(context.WithValue(ctx, keyFakeClientSet, false)))
 	})
 
-	t.Run("test valid config from secret, no fake client", func(t *testing.T) {
+	t.Run("valid config from secret, no fake client", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "secret", "source": "default/test-secret/cert.crt"}}`)
 		_ = readConfig("../config.yaml")
 		assert.Error(t, fetchBundles(context.WithValue(ctx, keyFakeClientSet, false)))
 	})
 
-	t.Run("test valid config from nonexistant secret", func(t *testing.T) {
+	t.Run("valid config from nonexistant secret", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "secret", "source": "default/fake/cert.crt"}}`)
 		_ = readConfig("../config.yaml")
 		assert.Error(t, fetchBundles(ctx))
 	})
 
-	t.Run("test valid config from nonexistant configMap", func(t *testing.T) {
+	t.Run("valid config from nonexistant configMap", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "configMap", "source": "default/fake/cert.crt"}}`)
 		_ = readConfig("../config.yaml")
 		assert.Error(t, fetchBundles(ctx))
 	})
 
-	t.Run("test config with invalid bundle url", func(t *testing.T) {
+	t.Run("config with invalid bundle url", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "url", "source": "https://invalid.local"}}`)
 		_ = readConfig("../config.yaml")
 		assert.Error(t, fetchBundles(ctx))
 	})
 
-	t.Run("test config with invalid bundle content", func(t *testing.T) {
+	t.Run("config with invalid bundle content", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"remote": {"type": "url", "source": "https://example.com"}}`)
 		_ = readConfig("../config.yaml")
 		assert.Error(t, fetchBundles(ctx))
 	})
 
-	t.Run("test config with invalid local content", func(t *testing.T) {
+	t.Run("config with invalid local content", func(t *testing.T) {
 		viper.Set("bundles", nil)
 		_ = os.Setenv("CA_INJECTOR_ROOTCA", `{"local": {"type": "local", "source": "invalid"}}`)
 		_ = readConfig("../config.yaml")

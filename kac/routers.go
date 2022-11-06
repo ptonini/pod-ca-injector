@@ -21,9 +21,8 @@
 package kac
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // Route is the information for every URI.
