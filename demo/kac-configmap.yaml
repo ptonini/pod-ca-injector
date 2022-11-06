@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ca-injector-config
+  name: kac-config
   namespace: example
 data:
   config.yaml: |
     annotations:
       inject: ptonini.github.io/inject-ca
       injected: ptonini.github.io/ca-injected
-    configMapName: ca-injector
+    configMapName: kac
     rootCA:
       baltimore:
         type: url

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ca-injector
+  name: kac
   namespace: example
 spec:
   ports:
@@ -10,5 +10,5 @@ spec:
     protocol: TCP
     targetPort: 8443
   selector:
-    app: ca-injector
+    app: kac
   type: ClusterIP
