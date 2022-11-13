@@ -9,7 +9,6 @@ on:
   pull_request:
     types:
       - opened
-      - reopened
       - synchronize
       - closed
     branches:
@@ -18,6 +17,18 @@ on:
       - legacy/*
 
 jobs:
+  
+  code_testing:
+    uses: ptonini/gha-workflows/.github/workflows/code-testing.yaml@main
+    if: github.event.action != 'closed' && github.event.head_commit.author.name != 'github-actions[bot]' && !contains(github.event.repository.topics, 'skip-testing')
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  code_linting:
+    uses: ptonini/gha-workflows/.github/workflows/code-linting.yaml@main
+    if: github.event_name == 'pull_request' && contains('opened synchronize', github.event.action) && !contains(github.event.repository.topics, 'skip-linting')
+  security_scan:
+    uses: ptonini/gha-workflows/.github/workflows/trufflehog.yaml@main
+    if: github.event_name == 'pull_request' && contains('opened synchronize', github.event.action)
   release_please:
     uses: ptonini/gha-workflows/.github/workflows/release-please.yaml@main
     if: github.event_name == 'push'
@@ -25,21 +36,21 @@ jobs:
   startup:
     uses: ptonini/gha-workflows/.github/workflows/startup.yaml@main
     if: (!contains(github.event.pull_request.head.ref, 'release-please--'))
-    secrets:
-      ORG_CONFIG: ${{ secrets.ORG_CONFIG }}
   
-  publish_candidate:
+  build_candidate:
     uses: ptonini/gha-workflows/.github/workflows/publish-docker-image.yaml@main
-    if: needs.startup.outputs.publish_candidate == 'true'
+    if: github.event_name == 'pull_request' && contains('opened synchronize', github.event.action)
     needs:
       - startup
     with:
       repository: ${{ needs.startup.outputs.docker_repository }}
       tags: ${{ format('latest pr{0}', github.event.number) }}
+    secrets:
+      BUILD_ARGUMENTS: --build-arg BUILD_USERNAME=${{ github.actor }} --build-arg BUILD_PASSWORD=${{ secrets.GH_PACKAGES_TOKEN }}
   
   approve_candidate:
     uses: ptonini/gha-workflows/.github/workflows/retag-docker-image.yaml@main
-    if: needs.startup.outputs.approve_candidate == 'true'
+    if: github.event.pull_request.merged
     needs:
       - startup
     with:
@@ -48,32 +59,9 @@ jobs:
   
   promote_candidate:
     uses: ptonini/gha-workflows/.github/workflows/retag-docker-image.yaml@main
-    if: needs.startup.outputs.promote_candidate == 'true'
+    if: github.event_name == 'push' && github.event.head_commit.author.name == 'github-actions[bot]'
     needs:
       - startup
     with:
       source_tag: pr-approved
       tag: ${{ needs.startup.outputs.release_version }}
-  
-  unit_tests:
-    uses: ptonini/gha-workflows/.github/workflows/unit-tests.yaml@main
-    if: needs.startup.outputs.skip_tests == 'false'
-    needs:
-      - startup
-  quality_scan:
-    uses: ptonini/gha-workflows/.github/workflows/sonarcloud.yaml@main
-    needs:
-      - unit_tests
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  
-  code_linting:
-    uses: ptonini/gha-workflows/.github/workflows/code-linting.yaml@main
-    if: needs.startup.outputs.housekeeping == 'true'
-    needs:
-      - startup
-  security_leaks_scan:
-    uses: ptonini/gha-workflows/.github/workflows/trufflehog.yaml@main
-    if: needs.startup.outputs.housekeeping == 'true'
-    needs:
-      - startup
