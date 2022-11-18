@@ -46,7 +46,9 @@ jobs:
       repository: ${{ needs.start.outputs.docker_repository }}
       tags: ${{ format('latest pr{0}', github.event.number) }}
     secrets:
-      BUILD_ARGUMENTS: --build-arg BUILD_USERNAME=${{ github.actor }} --build-arg BUILD_PASSWORD=${{ secrets.GH_PACKAGES_TOKEN }}
+      BUILD_ARGUMENTS: |
+        BUILD_USERNAME=${{ github.actor }}
+        BUILD_PASSWORD=${{ secrets.GH_PACKAGES_TOKEN }}
   
   approve_candidate:
     uses: ptonini/gha-workflows/.github/workflows/retag-docker-image.yaml@main
@@ -59,7 +61,7 @@ jobs:
   
   promote_candidate:
     uses: ptonini/gha-workflows/.github/workflows/retag-docker-image.yaml@main
-    if: github.event_name == 'push' && github.event.head_commit.author.name == 'github-actions[bot]'
+    if: github.event_name == 'push' && contains(github.event.commits.*.author.name, 'github-actions[bot]')
     needs:
       - start
     with:
